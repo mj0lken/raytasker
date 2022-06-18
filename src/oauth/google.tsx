@@ -107,6 +107,40 @@ export async function fetchTasks(listId: string): Promise<Task[]> {
     return item
   });
 }
+export async function updateTask(task: Partial<Task>): Promise<any> {
+  // const params = new URLSearchParams();
+  const response = await fetch(`https://tasks.googleapis.com/tasks/v1/lists/${"listId"}/tasks`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
+    },
+  });
+  if (!response.ok) {
+    console.error("fetch tasks error:", await response.text());
+    throw new Error(response.statusText);
+  }
+  const json = (await response.json()) as TasksList;
+ 
+  // return json.items.map(item => {
+  //   item.list = listId
+  //   return item
+  // });
+}
+
+export async function deleteTask(taskID: string): Promise<any> {
+
+  // const params = new URLSearchParams();
+  const response = await fetch(`https://tasks.googleapis.com/tasks/v1/lists/${"listId"}/tasks`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
+    },
+  });
+  if (!response.ok) {
+    console.error("fetch tasks error:", await response.text());
+    throw new Error(response.statusText);
+  }
+}
 
 export interface TaskLists {
   kind: string;

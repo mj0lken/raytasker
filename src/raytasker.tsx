@@ -1,5 +1,5 @@
 
-import { List, Detail, Toast, showToast, Icon, ActionPanel, Action, Color } from "@raycast/api";
+import { List, Detail, Toast, showToast, Icon, ActionPanel, Action, Color, useNavigation, Form } from "@raycast/api";
 import { useState, useEffect } from "react";
 import * as google from "./oauth/google";
 import { Task, TaskList } from "./oauth/google";
@@ -8,11 +8,57 @@ interface DDProps {
   lists: TaskList[];
 }
 
+function getDayOfWeek(day: number) {
+  console.log(day)
+}
+
+function EditTaskForm(task: Task) {
+  const { pop } = useNavigation();
+
+  return <List>
+    
+  </List>
+  // return (
+  //   <Form
+  //     actions={
+  //       <ActionPanel>
+  //         <Action.SubmitForm
+  //           title="Submit Edit"
+  //           icon={{ source: Icon.Trash, tintColor: Color.Red }}
+  //           shortcut={{ modifiers: ["cmd"], key: "enter" }}
+  //           onSubmit={(values) => console.log(values)}
+  //         />
+  //       </ActionPanel>
+  //     }
+  //   >
+  //     <Form.TextField id="title" title="Title" defaultValue={task.title} />
+  //     <Form.TextArea id="notes" title="Description" defaultValue={task.notes} />
+  //     <Form.DatePicker
+  //       id="due"
+  //       title="Deadline"
+  //       defaultValue={task.due ? new Date(task.due) : undefined}
+  //     />
+  //     <Form.Dropdown id="list" title="List" defaultValue={task.list}>
+  //       <Form.Dropdown.Item value="poop" title="Pile of poop" icon="💩" />
+  //       <Form.Dropdown.Item value="rocket" title="Rocket" icon="🚀" />
+  //       <Form.Dropdown.Item
+  //         value="lol"
+  //         title="Rolling on the floor laughing face"
+  //         icon="🤣"
+  //       />
+  //     </Form.Dropdown>
+  //   </Form>
+  // );
+}
+
+
 export default function Command() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [allTaskLists, setAllTaskLists] = useState<TaskList[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [allTasks, setAllTasks] = useState<Task[]>([]);
+
+  const { push } = useNavigation();
   showToast({ title: `Fetched ${allTasks.length} tasks in ${allTaskLists.length} lists` ?? "No tasks", style: Toast.Style.Success });
 
   useEffect(() => {
@@ -72,7 +118,6 @@ export default function Command() {
           filterTasks(filteredListId);
         }}
       >
-        {/* <List.Dropdown.Section title="Task Lists"> */}
         {lists.map(list => (
           <List.Dropdown.Item
             key={list.id}
@@ -80,36 +125,54 @@ export default function Command() {
             value={list.id}
           />
         ))}
-        {/* </List.Dropdown.Section> */}
       </List.Dropdown>
     );
   }
   function filterTasks(listId: string) {
     const fTasks = allTasks.filter(task => task.list == listId)
+    //sort on due
     setFilteredTasks(fTasks)
+  }
+  function getTimeRemaining(task: Task) {
+    //sort on due
+    return new Date(task.due).toLocaleDateString()
+  }
+  function sortNotes(note: string) {
+    console.log(note)
   }
 
   return (
     <List isLoading={isLoading}
-      isShowingDetail searchBarAccessory={<ListDropdown lists={allTaskLists} />}>
+      // isShowingDetail
+      searchBarAccessory={<ListDropdown lists={allTaskLists} />}>
 
       {filteredTasks.map(task => (
+        // Insert item here!
         <List.Item key={task.id} title={task.title}
           icon={{ source: Icon.Circle, tintColor: Color.Magenta }}
-          subtitle={"List Name"}
+          subtitle={task.due ? getTimeRemaining(task) : ""}
           // detail={
           //   <List.Item.Detail
-          //     // markdown={JSON.stringify(task)}
+          //     markdown={JSON.stringify(task)}
           //     metadata={
           //       <List.Item.Detail.Metadata>
           //         <List.Item.Detail.Metadata.Label title="Title" text={task.title} />
-          //         <List.Item.Detail.Metadata.Label title="Height" text="70cm" />
           //         <List.Item.Detail.Metadata.Separator />
+          //         {/* <List.Item.Detail.Metadata.Link
+          //   title="Link"
+          //   target="https://www.pokemon.com/us/pokedex/pikachu"
+          //   text="Pikachu Link"
+          // /> */}
+
+          //         {/* <List.Item.Detail.Metadata.TagList title="Type">
+          //   <List.Item.Detail.Metadata.TagList.Item text="Electric" color={"#eed535"} />
+          // </List.Item.Detail.Metadata.TagList> */}
           //         <List.Item.Detail.Metadata.Label
           //           title="Due"
           //           icon={Icon.Calendar}
-          //           text={task.title}
+          //           text={task.due ? new Date(task.due).toLocaleDateString() : "-"}
           //         />
+          //         <List.Item.Detail.Metadata.Label title="Notes" text={task.title} />
           //       </List.Item.Detail.Metadata>
           //     }
           //   />
@@ -117,8 +180,8 @@ export default function Command() {
           actions={
             <ActionPanel>
               <Action
-                icon={{ source: Icon.Checkmark, tintColor: Color.Blue }}
-                title="Complete"
+                icon={{ source: Icon.Checkmark, tintColor: Color.PrimaryText }}
+                title="Mark complete"
                 shortcut={{ modifiers: ["cmd"], key: "enter" }}
                 onAction={() => showToast({ style: Toast.Style.Success, title: "Task completed!" })}
               />
@@ -128,9 +191,16 @@ export default function Command() {
                 shortcut={{ modifiers: ["cmd"], key: "backspace" }}
                 onAction={() => showToast({ style: Toast.Style.Success, title: "Task deleted!" })}
               />
+              <Action
+                icon={{ source: Icon.Pencil, tintColor: Color.PrimaryText }}
+                title="Edit"
+                shortcut={{ modifiers: ["cmd"], key: "e" }}
+                onAction={() => push(EditTaskForm(task))}
+              />
             </ActionPanel>
           }
         />
+        //End item above
       ))
       }
 
