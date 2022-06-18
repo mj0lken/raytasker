@@ -12,43 +12,45 @@ function getDayOfWeek(day: number) {
   console.log(day)
 }
 
-function EditTaskForm(task: Task) {
+function EditTaskForm(edit: { task: Task, lists: TaskList[] }) {
+  const { task, lists } = edit;
   const { pop } = useNavigation();
 
-  return <List>
-    
-  </List>
-  // return (
-  //   <Form
-  //     actions={
-  //       <ActionPanel>
-  //         <Action.SubmitForm
-  //           title="Submit Edit"
-  //           icon={{ source: Icon.Trash, tintColor: Color.Red }}
-  //           shortcut={{ modifiers: ["cmd"], key: "enter" }}
-  //           onSubmit={(values) => console.log(values)}
-  //         />
-  //       </ActionPanel>
-  //     }
-  //   >
-  //     <Form.TextField id="title" title="Title" defaultValue={task.title} />
-  //     <Form.TextArea id="notes" title="Description" defaultValue={task.notes} />
-  //     <Form.DatePicker
-  //       id="due"
-  //       title="Deadline"
-  //       defaultValue={task.due ? new Date(task.due) : undefined}
-  //     />
-  //     <Form.Dropdown id="list" title="List" defaultValue={task.list}>
-  //       <Form.Dropdown.Item value="poop" title="Pile of poop" icon="💩" />
-  //       <Form.Dropdown.Item value="rocket" title="Rocket" icon="🚀" />
-  //       <Form.Dropdown.Item
-  //         value="lol"
-  //         title="Rolling on the floor laughing face"
-  //         icon="🤣"
-  //       />
-  //     </Form.Dropdown>
-  //   </Form>
-  // );
+  return (
+    <Form
+      actions={
+        <ActionPanel>
+          <Action.SubmitForm
+            title="Submit Edit"
+            icon={{ source: Icon.Trash, tintColor: Color.Red }}
+            shortcut={{ modifiers: ["cmd"], key: "enter" }}
+            onSubmit={(values) => {
+              console.log(values)
+
+              showToast({ title: `Task updated`, style: Toast.Style.Success });
+              //Editing: 1st move.
+              //Editing: then save
+              setTimeout(() => showToast({ title: `Task updated`, style: Toast.Style.Success }), 3000)
+
+              pop();
+            }}
+          />
+        </ActionPanel>
+      }
+    >
+      <Form.TextField id="title" title="Title" defaultValue={task.title} />
+      <Form.DatePicker
+        id="due"
+        title="Deadline"
+        defaultValue={task.due ? new Date(task.due) : undefined}
+      />
+      <Form.Separator />
+      <Form.TextArea id="notes" title="Description" defaultValue={task.notes} />
+      <Form.Dropdown id="list" title="List" defaultValue={task.list}>
+        {lists.map(list => <Form.Dropdown.Item value={list.id} key={list.id} title={list.title} icon={Icon.Dot} />)}
+      </Form.Dropdown>
+    </Form>
+  );
 }
 
 
@@ -56,6 +58,7 @@ export default function Command() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [allTaskLists, setAllTaskLists] = useState<TaskList[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
+  const [subTasks, setSubTasks] = useState<Task[]>([]);
   const [allTasks, setAllTasks] = useState<Task[]>([]);
 
   const { push } = useNavigation();
@@ -101,6 +104,7 @@ export default function Command() {
   }
 
   function getIcon(task: Task): any {
+    // TODO
     // if(false) {
     // return Icon.ExclamationMark  
     // }
@@ -129,8 +133,8 @@ export default function Command() {
     );
   }
   function filterTasks(listId: string) {
-    const fTasks = allTasks.filter(task => task.list == listId)
-    //sort on due
+    const fTasks = allTasks.filter(task => !task.parent && (task.list == listId))
+    // TODO sort on due date
     setFilteredTasks(fTasks)
   }
   function getTimeRemaining(task: Task) {
@@ -195,7 +199,7 @@ export default function Command() {
                 icon={{ source: Icon.Pencil, tintColor: Color.PrimaryText }}
                 title="Edit"
                 shortcut={{ modifiers: ["cmd"], key: "e" }}
-                onAction={() => push(EditTaskForm(task))}
+                onAction={() => { push(<EditTaskForm task={task} lists={allTaskLists} />) }}
               />
             </ActionPanel>
           }
