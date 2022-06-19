@@ -44,7 +44,7 @@ export default function Command() {
           showToast({ style: Toast.Style.Failure, title: String(error) })
         }
       })();
-    }, [google]);
+    }, [google, allTasks]);
     console.log("render!")
     
 
@@ -91,6 +91,7 @@ export default function Command() {
     // TODO sort on due date
     setAllTasks(newTasks)
   }
+
   function addTask(task: Task) {
     const newTasks = allTasks
     newTasks.push(task)
