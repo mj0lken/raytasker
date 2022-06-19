@@ -70,7 +70,6 @@ async function refreshTokens(refreshToken: string): Promise<OAuth.TokenResponse>
 
 // API
 
-// export async function fetchLists(): Promise<{ id: string; title: string }[]> {
 export async function fetchLists(): Promise<TaskList[]> {
   // const params = new URLSearchParams();
 

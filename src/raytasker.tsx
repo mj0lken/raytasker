@@ -160,11 +160,9 @@ export default function Command() {
                 onAction={async () => {
                   if (await sendAlert("Delete the task?", "You will not be able torecover it", "Delete")) {
                     setIsLoading(true)
-                    console.log('deleting?')
                     const res = await google.deleteTask(task.list, task.id)
                     if (res.status = 204) {
                       showToast({ style: Toast.Style.Success, title: "Deleted" })
-                      console.log('deleted!')
                       removeTask(task.id)
                       filterTasks(task.list)
                     } else {
