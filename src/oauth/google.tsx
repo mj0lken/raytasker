@@ -107,25 +107,25 @@ export async function fetchTasks(listId: string): Promise<Task[]> {
     return item
   });
 }
-export async function patchTask(listId: string, task: Partial<Task>): Promise<any> {
+export async function patchTask(taskId: string, listId: string, task: Partial<Task>): Promise<any> {
   // const params = new URLSearchParams();
-  const response = await fetch(`https://tasks.googleapis.com/tasks/v1/lists/${listId}/tasks`, {
+  const response = await fetch(`https://tasks.googleapis.com/tasks/v1/lists/${listId}/tasks/${taskId}`, {
     method: 'PATCH',
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
     },
-  });
+    body: JSON.stringify(task)
+  })
   if (!response.ok) {
-    console.error("fetch tasks error:", await response.text());
-    throw new Error(response.statusText);
+    console.error("fetch tasks error:", await response.text())
+    throw new Error(response.statusText)
   }
-  const json = (await response.json()) as TasksList;
 
-  // return json.items.map(item => {
-  //   item.list = listId
-  //   return item
-  // });
+  // console.log("--------")
+  // console.log((await response.json()))
+  // console.log("--------")
+  return await response
 }
 
 export async function moveTask(listId: string, taskId: string): Promise<any> {

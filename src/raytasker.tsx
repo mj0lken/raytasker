@@ -36,17 +36,16 @@ export default function Command() {
             setAllTasks(tasks)
             filterTasks(chosenList)
           })
-          console.log("effect!")
-          setIsLoading(false)
-        } catch (error) {
-          console.error(error)
-          setIsLoading(false)
-          showToast({ style: Toast.Style.Failure, title: String(error) })
-        }
-      })();
-    }, [google, allTasks]);
-    console.log("render!")
-    
+        console.log("effect!")
+        setIsLoading(false)
+      } catch (error) {
+        console.error(error)
+        setIsLoading(false)
+        showToast({ style: Toast.Style.Failure, title: String(error) })
+      }
+    })();
+  }, [google, allTasks]);
+  console.log("render!")
 
   function getDayOfWeek(day: number) {
     console.log(day)
@@ -90,11 +89,20 @@ export default function Command() {
     const newTasks = allTasks.filter(task => !(task.id == taskId))
     // TODO sort on due date
     setAllTasks(newTasks)
+    filterTasks(chosenList)
   }
 
   function addTask(task: Task) {
     const newTasks = allTasks
     newTasks.push(task)
+    // TODO sort on due date
+    setAllTasks(newTasks)
+    filterTasks(chosenList)
+  }
+
+  function editTask(task: Task, ind: number) {
+    const newTasks = allTasks
+    newTasks[ind] = task
     // TODO sort on due date
     setAllTasks(newTasks)
     filterTasks(chosenList)
@@ -117,12 +125,12 @@ export default function Command() {
     <List isLoading={isLoading}
       isShowingDetail
       searchBarAccessory={
-      <ListDropdown chooseList={setChosenList} 
-      lists={allTaskLists} 
-      filterTasks={filterTasks} 
-      chosenList={chosenList} />}>
+        <ListDropdown chooseList={setChosenList}
+          lists={allTaskLists}
+          filterTasks={filterTasks}
+          chosenList={chosenList} />}>
 
-      {filteredTasks.map(task => (
+      {filteredTasks.map((task, i) => (
         <List.Item key={task.id} title={task.title}
           icon={getIcon(task)}
           subtitle={task.due ? getTimeRemaining(task) : ""}
@@ -178,9 +186,9 @@ export default function Command() {
                 title="Edit"
                 shortcut={{ modifiers: ["cmd"], key: "e" }}
                 onAction={() => {
-                  push(<EditTaskForm task={task} currentList={chosenList} lists={allTaskLists}
+                  push(<EditTaskForm index={i} task={task} currentList={chosenList} lists={allTaskLists}
                     createNew={false} filterTasks={filterTasks}
-                    isLoading={setIsLoading} addTask={addTask} />)
+                    isLoading={setIsLoading} addTask={addTask} editTask={editTask} />)
                 }}
               />
               <Action
@@ -188,9 +196,9 @@ export default function Command() {
                 title="Create Task"
                 shortcut={{ modifiers: ["cmd"], key: "n" }}
                 onAction={() => {
-                  push(<EditTaskForm currentList={chosenList} lists={allTaskLists}
+                  push(<EditTaskForm index={i} currentList={chosenList} lists={allTaskLists}
                     createNew={true} filterTasks={filterTasks}
-                    isLoading={setIsLoading} addTask={addTask} />)
+                    isLoading={setIsLoading} addTask={addTask} editTask={editTask} />)
                 }}
               />
             </ActionPanel>

@@ -55,9 +55,11 @@ export interface DDProps {
 export interface FormProps {
   lists: TaskList[];
   task?: Task;
+  index: number;
   currentList: string;
   filterTasks: (id: string) => void;
   isLoading: (loading: boolean) => void;
   addTask: (task: Task) => void;
+  editTask: (task: Task, index: number) => void;
   createNew: boolean;
 }
