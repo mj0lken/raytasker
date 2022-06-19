@@ -1,5 +1,6 @@
 import { OAuth } from "@raycast/api";
 import fetch from "node-fetch";
+import { TaskList, TaskLists, Task, TasksList } from "../interfaces";
 
 // Create an OAuth client ID via https://console.developers.google.com/apis/credentials
 // As application type choose "iOS" (required for PKCE)
@@ -164,7 +165,6 @@ export async function createTask(listId: string, task: any): Promise<any> {
 }
 
 export async function deleteTask(listId: string, taskId: string): Promise<any> {
-  console.log('delete: ', taskId)
   const response = await fetch(`https://tasks.googleapis.com/tasks/v1/lists/${listId}/tasks/${taskId}`, {
     method: "DELETE",
     headers: {
@@ -176,53 +176,5 @@ export async function deleteTask(listId: string, taskId: string): Promise<any> {
     console.error("fetch tasks error:", await response.text());
     throw new Error(response.statusText);
   }
-  console.log('deleted: ', (await response).status)
   return await response
-}
-
-export interface TaskLists {
-  kind: string;
-  etag: string;
-  nextPageToken: string;
-  items: TaskList[]
-}
-
-export interface TaskList {
-  kind: string;
-  id: string;
-  etag: string;
-  title: string;
-  updated: string;
-  selfLink: string
-}
-
-export interface TasksList {
-  kind: string;
-  etag: string;
-  nextPageToken?: string;
-  items: Task[
-  ]
-}
-
-export interface Task {
-  list: string;
-  kind: string;
-  id: string;
-  etag: string;
-  title: string;
-  updated: string;
-  selfLink: string;
-  parent: string;
-  position: string;
-  notes: string;
-  status: string;
-  due: string;
-  completed: string;
-  deleted: boolean;
-  hidden: boolean;
-  links: {
-    type: string;
-    description: string;
-    link: string
-  }[]
 }
