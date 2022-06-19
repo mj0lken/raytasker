@@ -101,15 +101,16 @@ export async function fetchTasks(listId: string): Promise<Task[]> {
     throw new Error(response.statusText);
   }
   const json = (await response.json()) as TasksList;
- 
+
   return json.items.map(item => {
     item.list = listId
     return item
   });
 }
-export async function updateTask(task: Partial<Task>): Promise<any> {
+export async function patchTask(listId: string, task: Partial<Task>): Promise<any> {
   // const params = new URLSearchParams();
-  const response = await fetch(`https://tasks.googleapis.com/tasks/v1/lists/${"listId"}/tasks`, {
+  const response = await fetch(`https://tasks.googleapis.com/tasks/v1/lists/${listId}/tasks`, {
+    method: 'PATCH',
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
@@ -120,17 +121,52 @@ export async function updateTask(task: Partial<Task>): Promise<any> {
     throw new Error(response.statusText);
   }
   const json = (await response.json()) as TasksList;
- 
+
   // return json.items.map(item => {
   //   item.list = listId
   //   return item
   // });
 }
 
-export async function deleteTask(taskID: string): Promise<any> {
+export async function moveTask(listId: string, taskId: string): Promise<any> {
 
-  // const params = new URLSearchParams();
-  const response = await fetch(`https://tasks.googleapis.com/tasks/v1/lists/${"listId"}/tasks`, {
+  const response = await fetch(`https://tasks.googleapis.com/tasks/v1/lists/${listId}/tasks/${taskId}`, {
+    method: 'POST',
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
+    }
+  });
+  if (!response.ok) {
+    console.error("fetch tasks error:", await response.text());
+    throw new Error(response.statusText);
+  }
+  return await response
+}
+export async function createTask(listId: string, task: any): Promise<any> {
+
+  const response = await fetch(`https://tasks.googleapis.com/tasks/v1/lists/${listId}/tasks`, {
+    method: 'POST',
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
+    },
+    body: JSON.stringify(task)
+  });
+  if (!response.ok) {
+    console.error("fetch tasks error:", await response.text());
+    throw new Error(response.statusText);
+  }
+  // console.log("--------")
+  // console.log((await response.json()))
+  // console.log("--------")
+  return await response
+}
+
+export async function deleteTask(listId: string, taskId: string): Promise<any> {
+  console.log('delete: ', taskId)
+  const response = await fetch(`https://tasks.googleapis.com/tasks/v1/lists/${listId}/tasks/${taskId}`, {
+    method: "DELETE",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
@@ -140,6 +176,8 @@ export async function deleteTask(taskID: string): Promise<any> {
     console.error("fetch tasks error:", await response.text());
     throw new Error(response.statusText);
   }
+  console.log('deleted: ', (await response).status)
+  return await response
 }
 
 export interface TaskLists {

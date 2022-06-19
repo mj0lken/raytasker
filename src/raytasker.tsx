@@ -1,5 +1,5 @@
 
-import { List, Detail, Toast, showToast, Icon, ActionPanel, Action, Color, useNavigation, Form } from "@raycast/api";
+import { List, Detail, Toast, showToast, Icon, ActionPanel, Action, Color, useNavigation, Form, Alert, confirmAlert } from "@raycast/api";
 import { useState, useEffect } from "react";
 import * as google from "./oauth/google";
 import { Task, TaskList } from "./oauth/google";
@@ -8,61 +8,14 @@ interface DDProps {
   lists: TaskList[];
 }
 
-function getDayOfWeek(day: number) {
-  console.log(day)
-}
-
-function EditTaskForm(edit: { task: Task, lists: TaskList[] }) {
-  const { task, lists } = edit;
-  const { pop } = useNavigation();
-
-  return (
-    <Form
-      actions={
-        <ActionPanel>
-          <Action.SubmitForm
-            title="Submit Edit"
-            icon={{ source: Icon.Trash, tintColor: Color.Red }}
-            shortcut={{ modifiers: ["cmd"], key: "enter" }}
-            onSubmit={(values) => {
-              console.log(values)
-
-              showToast({ title: `Task updated`, style: Toast.Style.Success });
-              //Editing: 1st move.
-              //Editing: then save
-              setTimeout(() => showToast({ title: `Task updated`, style: Toast.Style.Success }), 3000)
-
-              pop();
-            }}
-          />
-        </ActionPanel>
-      }
-    >
-      <Form.TextField id="title" title="Title" defaultValue={task.title} />
-      <Form.DatePicker
-        id="due"
-        title="Deadline"
-        defaultValue={task.due ? new Date(task.due) : undefined}
-      />
-      <Form.Separator />
-      <Form.TextArea id="notes" title="Description" defaultValue={task.notes} />
-      <Form.Dropdown id="list" title="List" defaultValue={task.list}>
-        {lists.map(list => <Form.Dropdown.Item value={list.id} key={list.id} title={list.title} icon={Icon.Dot} />)}
-      </Form.Dropdown>
-    </Form>
-  );
-}
-
-
 export default function Command() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [allTaskLists, setAllTaskLists] = useState<TaskList[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
-  const [subTasks, setSubTasks] = useState<Task[]>([]);
   const [allTasks, setAllTasks] = useState<Task[]>([]);
+  // const [subTasks, setSubTasks] = useState<Task[]>([]);
 
   const { push } = useNavigation();
-  showToast({ title: `Fetched ${allTasks.length} tasks in ${allTaskLists.length} lists` ?? "No tasks", style: Toast.Style.Success });
 
   useEffect(() => {
 
@@ -79,16 +32,9 @@ export default function Command() {
         await google.fetchLists()
           .then(async list => {
             setAllTaskLists(list)
-
-            console.log("list 0: ", list[0])
-            // console.log("list.length: ", list.length)
-            console.log(allTaskLists.length)
-            // console.log("====")
             const tasks = await getTask(list)
-            console.log('task 1', tasks[1])
             setAllTasks(tasks)
-            setFilteredTasks(tasks)
-            console.log(allTasks.length)
+            filterTasks(list[0].id)
           })
         setIsLoading(false)
       } catch (error) {
@@ -99,16 +45,91 @@ export default function Command() {
     })();
   }, [google, isLoading]);
 
+  function getDayOfWeek(day: number) {
+    console.log(day)
+  }
+
+  async function sendAlert(title: string, message: string, primaryTitle = "OK",): Promise<boolean> {
+    const options: Alert.Options = {
+      title,
+      message,
+      primaryAction: {
+        title: primaryTitle,
+        style: Alert.ActionStyle.Destructive,
+        onAction: () => { },
+      },
+    };
+    return await confirmAlert(options);
+  };
+
+  function EditTaskForm(edit: { task: Task, lists: TaskList[], createNew: boolean }) {
+    const { task, lists, createNew } = edit;
+    const { pop } = useNavigation();
+
+    return (
+      <Form
+        actions={
+          <ActionPanel>
+            <Action.SubmitForm
+              title="Save"
+              icon={{ source: Icon.Trash, tintColor: Color.Red }}
+              shortcut={{ modifiers: ["cmd"], key: "enter" }}
+              onSubmit={async (values) => {
+                if (createNew) {
+                  setIsLoading(true)
+                  const res = await google.createTask(values.list, values)
+                  if (res.status == 200) {
+                    showToast({ title: `Task Created`, style: Toast.Style.Success })
+                    addTask('funkar: ', await res.json())
+                  } else {
+                    showToast({ title: `Error: ${res.status}`, style: Toast.Style.Failure })
+                  }
+                  setIsLoading(false)
+                  pop()
+                } else {
+                  if (task.list != values.list) {
+                    setIsLoading(true)
+                    const res = await google.moveTask(values.list, task.id)
+                    if (res.status == 200) {
+                      showToast({ title: `Task Created`, style: Toast.Style.Success })
+                    } else {
+                      showToast({ title: `Error: ${res.status}`, style: Toast.Style.Failure })
+                    }
+                    setIsLoading(false)
+                  }
+                  // TODO: Handle no changes
+                  // TODO: Update changes
+                  pop()
+                }
+              }}
+            />
+          </ActionPanel>
+        }
+      >
+        <Form.TextField id="title" title="Title" defaultValue={task.title || undefined} />
+        <Form.DatePicker
+          id="due"
+          title="Deadline"
+          defaultValue={task.due ? new Date(task.due) : undefined}
+        />
+        <Form.Separator />
+        <Form.TextArea id="notes" title="Description" defaultValue={task.notes || undefined} />
+        <Form.Dropdown id="list" title="List" defaultValue={task.list}>
+          {lists.map(list => <Form.Dropdown.Item value={list.id} key={list.id} title={list.title} icon={Icon.Dot} />)}
+        </Form.Dropdown>
+      </Form>
+    );
+  }
+
   if (isLoading) {
     return <Detail isLoading={isLoading} />;
   }
 
   function getIcon(task: Task): any {
-    // TODO
-    // if(false) {
-    // return Icon.ExclamationMark  
-    // }
-    return Icon.Circle
+    if (new Date(task.due).getTime() < new Date().getTime()) {
+      return { source: Icon.ExclamationMark, tintColor: Color.Orange }
+    }
+    return { source: Icon.Circle, tintColor: Color.PrimaryText }
   }
 
   function ListDropdown(props: DDProps) {
@@ -132,55 +153,72 @@ export default function Command() {
       </List.Dropdown>
     );
   }
+
   function filterTasks(listId: string) {
-    const fTasks = allTasks.filter(task => !task.parent && (task.list == listId))
+    const newTasks = allTasks
+      .filter(task => !task.parent && (task.list == listId))
     // TODO sort on due date
-    setFilteredTasks(fTasks)
+    // .sort((a, b) => new Date(a.due).getTime() - new Date(b.due).getTime())
+    setFilteredTasks(newTasks)
   }
+
+  function removeTasks(taskId: string) {
+    const newTasks = allTasks.filter(task => !(task.id == taskId))
+    // TODO sort on due date
+    setAllTasks(newTasks)
+  }
+  function addTask(task: Task) {
+    const newTasks = allTasks
+    // const newFTasks = filteredTasks
+    newTasks.push(task)
+    // newFTasks.push(task)
+    // TODO sort on due date
+    setAllTasks(newTasks)
+    // setFilteredTasks(newFTasks)
+  }
+
+  function filterSubTasks() {
+    // TODO: Filter out sub tasks
+  }
+
   function getTimeRemaining(task: Task) {
     //sort on due
     return new Date(task.due).toLocaleDateString()
   }
+
   function sortNotes(note: string) {
     console.log(note)
   }
 
   return (
     <List isLoading={isLoading}
-      // isShowingDetail
+      isShowingDetail
       searchBarAccessory={<ListDropdown lists={allTaskLists} />}>
 
       {filteredTasks.map(task => (
-        // Insert item here!
         <List.Item key={task.id} title={task.title}
-          icon={{ source: Icon.Circle, tintColor: Color.Magenta }}
+          icon={getIcon(task)}
           subtitle={task.due ? getTimeRemaining(task) : ""}
-          // detail={
-          //   <List.Item.Detail
-          //     markdown={JSON.stringify(task)}
-          //     metadata={
-          //       <List.Item.Detail.Metadata>
-          //         <List.Item.Detail.Metadata.Label title="Title" text={task.title} />
-          //         <List.Item.Detail.Metadata.Separator />
-          //         {/* <List.Item.Detail.Metadata.Link
-          //   title="Link"
-          //   target="https://www.pokemon.com/us/pokedex/pikachu"
-          //   text="Pikachu Link"
-          // /> */}
-
-          //         {/* <List.Item.Detail.Metadata.TagList title="Type">
-          //   <List.Item.Detail.Metadata.TagList.Item text="Electric" color={"#eed535"} />
-          // </List.Item.Detail.Metadata.TagList> */}
-          //         <List.Item.Detail.Metadata.Label
-          //           title="Due"
-          //           icon={Icon.Calendar}
-          //           text={task.due ? new Date(task.due).toLocaleDateString() : "-"}
-          //         />
-          //         <List.Item.Detail.Metadata.Label title="Notes" text={task.title} />
-          //       </List.Item.Detail.Metadata>
-          //     }
-          //   />
-          // }
+          detail={
+            <List.Item.Detail
+              markdown={task.notes}
+              metadata={
+                <List.Item.Detail.Metadata>
+                  <List.Item.Detail.Metadata.Label
+                    title="Title"
+                    text={task.title}
+                    icon={Icon.Dot}
+                  />
+                  <List.Item.Detail.Metadata.Separator />
+                  <List.Item.Detail.Metadata.Label
+                    title="Due"
+                    icon={Icon.Calendar}
+                    text={task.due ? new Date(task.due).toLocaleDateString() : "-"}
+                  />
+                </List.Item.Detail.Metadata>
+              }
+            />
+          }
           actions={
             <ActionPanel>
               <Action
@@ -193,13 +231,42 @@ export default function Command() {
                 icon={{ source: Icon.Trash, tintColor: Color.Red }}
                 title="Delete"
                 shortcut={{ modifiers: ["cmd"], key: "backspace" }}
-                onAction={() => showToast({ style: Toast.Style.Success, title: "Task deleted!" })}
+                onAction={async () => {
+                  if (await sendAlert("Delete the task?", "You will not be able torecover it", "Delete")) {
+                    setIsLoading(true)
+                    console.log('deleting?')
+                    const res = await google.deleteTask(task.list, task.id)
+                    if (res.status = 204) {
+                      showToast({ style: Toast.Style.Success, title: "Deleted" })
+                      async function getTask(list: TaskList[]): Promise<Task[]> {
+                        const allTasks = list.flatMap(async list => {
+                          return await google.fetchTasks(list.id)
+                        })
+                        return (await Promise.all(allTasks)).flat()
+                      }
+                      // TODO: Remove from filtered List :)
+                      removeTasks(task.id)
+                      filterTasks(task.list)
+                    } else {
+                      showToast({ style: Toast.Style.Failure, title: "Failed deleting" })
+                    }
+                  }
+                  setIsLoading(false)
+                }}
               />
               <Action
                 icon={{ source: Icon.Pencil, tintColor: Color.PrimaryText }}
                 title="Edit"
                 shortcut={{ modifiers: ["cmd"], key: "e" }}
-                onAction={() => { push(<EditTaskForm task={task} lists={allTaskLists} />) }}
+                onAction={() => { push(<EditTaskForm task={task} lists={allTaskLists} createNew={false} />) }}
+              />
+              <Action
+                icon={{ source: Icon.Plus, tintColor: Color.PrimaryText }}
+                title="Create Task"
+                shortcut={{ modifiers: ["cmd"], key: "n" }}
+                onAction={() => {
+                  push(<EditTaskForm task={{} as Task} lists={allTaskLists} createNew={true} />)
+                }}
               />
             </ActionPanel>
           }
