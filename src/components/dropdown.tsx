@@ -1,9 +1,15 @@
 import { List } from "@raycast/api";
+import { useEffect } from "react";
 import { DDProps } from "../interfaces";
 
 export function ListDropdown(props: DDProps) {
 
-  console.log("render dropdown!")
+  useEffect(() => {
+    (async () => {
+     props.chooseList(props.chosenList)
+    })()
+  }, [props.chosenList])
+
   return (
     <List.Dropdown
       tooltip="Select list"

@@ -89,7 +89,6 @@ export async function fetchLists(): Promise<TaskList[]> {
 
 export async function fetchTasks(listId: string): Promise<Task[]> {
   // const params = new URLSearchParams()
-
   const response = await fetch(`https://tasks.googleapis.com/tasks/v1/lists/${listId}/tasks`, {
     headers: {
       "Content-Type": "application/json",
@@ -121,10 +120,6 @@ export async function patchTask(taskId: string, listId: string, task: Partial<Ta
     console.error("fetch tasks error:", await response.text())
     throw new Error(response.statusText)
   }
-
-  // console.log("--------")
-  // console.log((await response.json()))
-  // console.log("--------")
   return await response
 }
 
@@ -157,9 +152,6 @@ export async function createTask(listId: string, task: any): Promise<any> {
     console.error("fetch tasks error:", await response.text())
     throw new Error(response.statusText)
   }
-  // console.log("--------")
-  // console.log((await response.json()))
-  // console.log("--------")
   return await response
 }
 

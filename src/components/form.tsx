@@ -7,8 +7,7 @@ export function EditTaskForm(props: FormProps) {
   const { pop } = useNavigation()
   const [isChanged, setIsChanged] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  // const [chosenList, setChosenList] = useState<string>(props.chosenList ? props.chosenList : props.lists[0].id)
-  console.log("render form!")
+
   return (
     <Form
       isLoading={isLoading}
@@ -20,23 +19,24 @@ export function EditTaskForm(props: FormProps) {
             icon={{ source: Icon.Pin, tintColor: Color.Red }}
             shortcut={{ modifiers: ["cmd"], key: "enter" }}
             onSubmit={async (values) => {
-              props.isLoading(true)
 
               // Handle no changes
               if (!isChanged) {
-                props.isLoading(false)
+                // props.isLoading(false)
                 pop()
                 return
               }
+              setIsLoading(true)
               // Handle new Task
               if (props.createNew) {
                 const res = await google.createTask(values.list, values)
                 if (res.status == 200) {
                   showToast({ title: `Task Created`, style: Toast.Style.Success })
-                  props.addTask(await res.json())
+                  await props.addTask(await res.json())
                 } else {
                   showToast({ title: `Error: ${res.status}`, style: Toast.Style.Failure })
                 }
+
                 props.isLoading(false)
                 pop()
                 return
@@ -51,6 +51,7 @@ export function EditTaskForm(props: FormProps) {
                     showToast({ title: `Error: ${res.status}`, style: Toast.Style.Failure })
                   }
                   props.isLoading(false)
+                  pop()
                 } else {
                   // handle patching.
                   const patchTask = await Object.keys(values)
@@ -61,13 +62,13 @@ export function EditTaskForm(props: FormProps) {
 
                   if (res.status == 200) {
                     showToast({ title: `Task updated`, style: Toast.Style.Success })
-                    props.editTask(await res.json(), props.index)
+                    await props.editTask(await res.json(), props.index)
                   } else {
                     showToast({ title: `Error: ${res.status}`, style: Toast.Style.Failure })
                   }
+                  props.isLoading(false)
+                  pop()
                 }
-                props.isLoading(false)
-                pop()
               }
             }}
           />
