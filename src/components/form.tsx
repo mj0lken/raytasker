@@ -1,13 +1,13 @@
-import { Action, ActionPanel, Color, Form, Icon, List, showToast, Toast, useNavigation } from "@raycast/api";
-import { useState } from "react";
-import { FormProps, Task } from "../interfaces";
-import * as google from "./../oauth/google";
+import { Action, ActionPanel, Color, Form, Icon, showToast, Toast, useNavigation } from "@raycast/api"
+import { useState } from "react"
+import { FormProps, Task } from "../interfaces"
+import * as google from "./../oauth/google"
 
 export function EditTaskForm(props: FormProps) {
-  const { pop } = useNavigation();
-  const [isChanged, setIsChanged] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  // const [chosenList, setChosenList] = useState<string>(props.chosenList ? props.chosenList : props.lists[0].id);
+  const { pop } = useNavigation()
+  const [isChanged, setIsChanged] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  // const [chosenList, setChosenList] = useState<string>(props.chosenList ? props.chosenList : props.lists[0].id)
   console.log("render form!")
   return (
     <Form
@@ -20,17 +20,16 @@ export function EditTaskForm(props: FormProps) {
             icon={{ source: Icon.Pin, tintColor: Color.Red }}
             shortcut={{ modifiers: ["cmd"], key: "enter" }}
             onSubmit={async (values) => {
-              console.log("values: ", values)
-
+              props.isLoading(true)
 
               // Handle no changes
               if (!isChanged) {
+                props.isLoading(false)
                 pop()
                 return
               }
               // Handle new Task
               if (props.createNew) {
-                props.isLoading(true)
                 const res = await google.createTask(values.list, values)
                 if (res.status == 200) {
                   showToast({ title: `Task Created`, style: Toast.Style.Success })
@@ -45,7 +44,6 @@ export function EditTaskForm(props: FormProps) {
 
                 // Handle moved list
                 if (props.task && props.currentList != values.list) {
-                  props.isLoading(true)
                   const res = await google.moveTask(values.list, props.task.id)
                   if (res.status == 200) {
                     showToast({ title: `Task Created`, style: Toast.Style.Success })
@@ -55,26 +53,20 @@ export function EditTaskForm(props: FormProps) {
                   props.isLoading(false)
                 } else {
                   // handle patching.
-                  props.isLoading(true)
-                  // const patchTask = { ...props.task, ...values } as Task
                   const patchTask = await Object.keys(values)
                     .filter((k) => (values[k] != null) && (values[k] != undefined) && (values[k] != ""))
                     .reduce((a, k) => ({ ...a, [k]: values[k] }), {}) as Task
 
                   const res = await google.patchTask(props?.task?.id ? props.task.id : "", patchTask.list ? patchTask.list : props.currentList, patchTask as Task)
 
-                  // console.log("res: ", await res.json())
                   if (res.status == 200) {
                     showToast({ title: `Task updated`, style: Toast.Style.Success })
                     props.editTask(await res.json(), props.index)
                   } else {
                     showToast({ title: `Error: ${res.status}`, style: Toast.Style.Failure })
                   }
-                  pop()
-                  return
                 }
-
-                // TODO: Update changes
+                props.isLoading(false)
                 pop()
               }
             }}
@@ -109,5 +101,5 @@ export function EditTaskForm(props: FormProps) {
         {props.lists.map(list => <Form.Dropdown.Item value={list.id} key={list.id} title={list.title} icon={Icon.Dot} />)}
       </Form.Dropdown>
     </Form>
-  );
+  )
 }

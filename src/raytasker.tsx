@@ -1,55 +1,91 @@
 
-import { List, Detail, Toast, showToast, Icon, ActionPanel, Action, Color, useNavigation, Form, Alert, confirmAlert } from "@raycast/api";
-import { useState, useEffect } from "react";
-import { ListDropdown } from "./components/dropdown";
-import * as google from "./oauth/google";
-import { Task, TaskList } from "./interfaces";
-import { EditTaskForm } from "./components/form";
+import { Action, ActionPanel, Alert, Color, confirmAlert, Detail, Icon, List, showToast, Toast, useNavigation } from "@raycast/api"
+import { useEffect, useState } from "react"
+import { ListDropdown } from "./components/dropdown"
+import { EditTaskForm } from "./components/form"
+import { Task, TaskList } from "./interfaces"
+import * as google from "./oauth/google"
 
 export default function Command() {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [allTaskLists, setAllTaskLists] = useState<TaskList[]>([]);
-  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
-  const [chosenList, setChosenList] = useState<string>("");
-  const [allTasks, setAllTasks] = useState<Task[]>([]);
-  // const [subTasks, setSubTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [allTaskLists, setAllTaskLists] = useState<TaskList[]>([])
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([])
+  const [chosenList, setChosenList] = useState<string>("")
+  const [allTasks, setAllTasks] = useState<Task[]>([])
+  const [render, setRender] = useState<number>(0)
+  // const [subTasks, setSubTasks] = useState<Task[]>([])
 
-  const { push } = useNavigation();
+  const { push } = useNavigation()
+  console.log("pre!")
+
+  // async function getTasks(list = allTaskLists): Promise<Task[]> {
+  //   const tasks = list.flatMap(async list => {
+  //     return await google.fetchTasks(list.id)
+  //   })
+  //   const aTasks = (await Promise.all(allTasks)).flat()
+  //   setAllTasks(aTasks)
+  //   if (chosenList) {
+  //     filterTasks(chosenList)
+  //   }
+  //   return aTasks
+  // }
+
+  // async function getLists(): Promise<TaskList[]> {
+  //   const lists = await google.fetchLists()
+  //   setAllTaskLists(lists)
+  //   if (!chosenList) {
+  //     setChosenList(lists[0].id)
+  //   }
+  //   return lists
+  // }
 
   useEffect(() => {
-
-    async function getTask(list: TaskList[]): Promise<Task[]> {
-      const allTasks = list.flatMap(async list => {
-        return await google.fetchTasks(list.id)
-      })
-      return (await Promise.all(allTasks)).flat()
-    }
-
     (async () => {
+      setIsLoading(true)
+      async function getTasks(list = allTaskLists): Promise<Task[]> {
+        const tasks = list.flatMap(async list => {
+          return await google.fetchTasks(list.id)
+        })
+        const aTasks = (await Promise.all(allTasks)).flat()
+        setAllTasks(aTasks)
+        if (chosenList) {
+          filterTasks(chosenList)
+        }
+        return aTasks
+      }
+
+      console.log("effect!")
       try {
         await google.authorize()
         await google.fetchLists()
           .then(async list => {
             setAllTaskLists(list)
-            setChosenList(list[0].id)
-            const tasks = await getTask(list)
+            if (!chosenList) { setChosenList(list[0].id) }
+            const tasks = await getTasks(list)
             setAllTasks(tasks)
             filterTasks(chosenList)
           })
-        console.log("effect!")
-        setIsLoading(false)
+        // setAllTaskLists(await getLists())
+        // setAllTasks( await getTasks(allTaskLists))
+        // if (!chosenList && allTaskLists[0]) {
+        //   setChosenList(allTaskLists[0].id)
+        // } else {
+        //   filterTasks(chosenList)
+        //   setIsLoading(false)
+        // }
       } catch (error) {
         console.error(error)
         setIsLoading(false)
         showToast({ style: Toast.Style.Failure, title: String(error) })
       }
-    })();
-  }, [google, allTasks]);
+      setIsLoading(false)
+    })()
+  }, [google, allTasks])
   console.log("render!")
 
-  function getDayOfWeek(day: number) {
-    console.log(day)
-  }
+  // function getDayOfWeek(day: number) {
+  //   console.log(day)
+  // }
 
   async function sendAlert(title: string, message: string, primaryTitle = "OK",): Promise<boolean> {
     const options: Alert.Options = {
@@ -60,13 +96,8 @@ export default function Command() {
         style: Alert.ActionStyle.Destructive,
         onAction: () => { },
       },
-    };
-    return await confirmAlert(options);
-  };
-
-
-  if (isLoading) {
-    return <Detail isLoading={isLoading} />;
+    }
+    return await confirmAlert(options)
   }
 
   function getIcon(task: Task): any {
@@ -77,7 +108,7 @@ export default function Command() {
   }
 
   function filterTasks(listId: string) {
-    setChosenList(listId)
+    if (chosenList !== listId) setChosenList(listId)
     const newTasks = allTasks
       .filter(task => !task.parent && (task.list == listId))
     // TODO sort on due date
@@ -108,26 +139,29 @@ export default function Command() {
     filterTasks(chosenList)
   }
 
-  function filterSubTasks() {
-    // TODO: Filter out sub tasks
-  }
+  // function filterSubTasks() {
+  //   // TODO: Filter out sub tasks
+  // }
 
   function getTimeRemaining(task: Task) {
     //sort on due
     return new Date(task.due).toLocaleDateString()
   }
 
-  function sortNotes(note: string) {
-    // TODO: 
+  // function sortNotes(note: string) {
+  //   // TODO: 
+  // }
+  if (isLoading) {
+    return <Detail isLoading={isLoading} />
   }
 
   return (
     <List isLoading={isLoading}
       isShowingDetail
       searchBarAccessory={
-        <ListDropdown chooseList={setChosenList}
+        <ListDropdown chooseList={() => setChosenList}
           lists={allTaskLists}
-          filterTasks={filterTasks}
+          filterTasks={() => filterTasks}
           chosenList={chosenList} />}>
 
       {filteredTasks.map((task, i) => (
@@ -177,8 +211,8 @@ export default function Command() {
                     } else {
                       showToast({ style: Toast.Style.Failure, title: "Failed deleting" })
                     }
+                    setIsLoading(false)
                   }
-                  setIsLoading(false)
                 }}
               />
               <Action
@@ -204,7 +238,6 @@ export default function Command() {
             </ActionPanel>
           }
         />
-        //End item above
       ))
       }
 

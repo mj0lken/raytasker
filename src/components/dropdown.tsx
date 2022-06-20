@@ -1,6 +1,5 @@
 import { List } from "@raycast/api";
-import { useState } from "react";
-import { DDProps, TaskList } from "../interfaces";
+import { DDProps } from "../interfaces";
 
 export function ListDropdown(props: DDProps) {
 
@@ -8,7 +7,7 @@ export function ListDropdown(props: DDProps) {
   return (
     <List.Dropdown
       tooltip="Select list"
-      defaultValue={props.chosenList ? props.chosenList : props.lists[0].id}
+      defaultValue={props.chosenList ? props.chosenList : props?.lists[0]?.id || ""}
       storeValue={true}
       onChange={(listId) => {
         props.chooseList(listId);
