@@ -12,8 +12,6 @@ export default function Command() {
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([])
   const [currentList, setChosenList] = useState<string>("")
   const [allTasks, setAllTasks] = useState<Task[]>([])
-  // const [render, setRender] = useState<number>(0)
-  // const [subTasks, setSubTasks] = useState<Task[]>([])
 
   const { push } = useNavigation()
 
@@ -81,6 +79,9 @@ export default function Command() {
   }
 
   function getIcon(task: Task): any {
+    if (task.completed){
+      return { source: Icon.Checkmark, tintColor: Color.Purple }
+    }
     if (new Date(task.due).getTime() < new Date().getTime()) {
       return { source: Icon.ExclamationMark, tintColor: Color.Orange }
     }
@@ -116,7 +117,9 @@ export default function Command() {
   async function editTask(task: Task, ind: number) {
     // optimistic edit
     let newTasks = [...allTasks]
-    newTasks[ind] = task
+    newTasks[ind] = Object.assign(allTasks[ind], task)
+    console.log(newTasks[ind])
+    console.log(task)
     setAllTasks(newTasks)
     filterTasks(currentList)
     await getTasks()
@@ -132,8 +135,9 @@ export default function Command() {
   }
 
   // function sortNotes(note: string) {
-  //   // TODO: 
+  //  TODO: 
   // }
+
   if (isLoading) {
     return <Detail isLoading={isLoading} />
   }
@@ -177,29 +181,28 @@ export default function Command() {
                 icon={{ source: Icon.Checkmark, tintColor: Color.PrimaryText }}
                 title="Mark complete"
                 shortcut={{ modifiers: ["cmd"], key: "enter" }}
-                onAction={() => {
-                  if (await sendAlert("Delete the task?", "You will not be able to recover it later", "Delete")) {
-                    setIsLoading(true)
-                    const res = await google.deleteTask(task.list, task.id)
-                    if (res.status = 204) {
-                      showToast({ style: Toast.Style.Success, title: "Deleted" })
-                      await removeTask(task.id)
-                      // await getTasks()
-                    } else {
-                      showToast({ style: Toast.Style.Failure, title: "Failed deleting" })
-                    }
-                    setIsLoading(false)
+                onAction={async () => {
+                  setIsLoading(true)
+
+                  const patchTask ={completed: new Date().toISOString()} as Task
+                  const res = await google.patchTask(task.id, task.list, patchTask)
+                  if (res.status = 204) {
+                    showToast({ style: Toast.Style.Success, title: "Deleted" })
+                    await editTask(patchTask, i)
+                  } else {
+                    showToast({ style: Toast.Style.Failure, title: "Failed deleting" })
                   }
+                  // TODO: Unncheck tasks
+                  setIsLoading(false)
                   showToast({ style: Toast.Style.Success, title: "Task completed!" })
                 }}
               />
               <Action
-                icon={{ source: Icon.Checkmark, tintColor: Color.PrimaryText }}
-                title="Update"
+                icon={{ source: Icon.TwoArrowsClockwise, tintColor: Color.PrimaryText }}
+                title="Update task list"
                 shortcut={{ modifiers: ["cmd"], key: "u" }}
                 onAction={() => {
                   showToast({ style: Toast.Style.Success, title: "Updated task list" })
-                  // TODO request all tasks?
                   getTasks()
                 }}
               />
@@ -214,7 +217,6 @@ export default function Command() {
                     if (res.status = 204) {
                       showToast({ style: Toast.Style.Success, title: "Deleted" })
                       await removeTask(task.id)
-                      // await getTasks()
                     } else {
                       showToast({ style: Toast.Style.Failure, title: "Failed deleting" })
                     }
