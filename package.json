@@ -2,10 +2,10 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "raytasker",
   "title": "Raytasker",
-  "description": "Raycast google tasks extionsion",
-  "icon": "command-icon.png",
+  "description": "Raycast google tasks extension",
+  "icon": "raytasker-icon.png",
   "license": "MIT",
-  "author": "raycast",
+  "author": "mj0lken",
   "commands": [
     {
       "name": "raytasker",

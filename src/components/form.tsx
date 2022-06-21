@@ -16,7 +16,7 @@ export function EditTaskForm(props: FormProps) {
         <ActionPanel>
           <Action.SubmitForm
             title="Save"
-            icon={{ source: Icon.Pin, tintColor: Color.Red }}
+            icon={{ source: Icon.Upload, tintColor: Color.Blue }}
             shortcut={{ modifiers: ["cmd"], key: "enter" }}
             onSubmit={async (values) => {
 

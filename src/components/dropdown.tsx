@@ -1,6 +1,6 @@
-import { List } from "@raycast/api";
-import { useEffect } from "react";
-import { DDProps } from "../interfaces";
+import { List } from "@raycast/api"
+import { useEffect } from "react"
+import { DDProps } from "../interfaces"
 
 export function ListDropdown(props: DDProps) {
 
@@ -16,8 +16,8 @@ export function ListDropdown(props: DDProps) {
       defaultValue={props.chosenList ? props.chosenList : props?.lists[0]?.id || ""}
       storeValue={true}
       onChange={(listId) => {
-        props.chooseList(listId);
-        props.filterTasks(listId);
+        props.chooseList(listId)
+        props.filterTasks(listId)
       }}
     >
       {props.lists.map(list => (
@@ -28,5 +28,5 @@ export function ListDropdown(props: DDProps) {
         />
       ))}
     </List.Dropdown>
-  );
+  )
 }

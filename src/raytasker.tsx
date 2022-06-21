@@ -79,7 +79,7 @@ export default function Command() {
   }
 
   function getIcon(task: Task): any {
-    if (task.completed){
+    if (task.completed) {
       return { source: Icon.Checkmark, tintColor: Color.Purple }
     }
     if (new Date(task.due).getTime() < new Date().getTime()) {
@@ -177,33 +177,56 @@ export default function Command() {
           }
           actions={
             <ActionPanel>
-              <Action
-                icon={{ source: Icon.Checkmark, tintColor: Color.PrimaryText }}
-                title="Mark complete"
-                shortcut={{ modifiers: ["cmd"], key: "enter" }}
-                onAction={async () => {
-                  setIsLoading(true)
+              <ActionPanel.Section>
+                <Action
+                  icon={{ source: Icon.Checkmark, tintColor: Color.Blue }}
+                  title="Mark complete"
+                  shortcut={{ modifiers: ["cmd"], key: "enter" }}
+                  onAction={async () => {
+                    setIsLoading(true)
 
-                  const patchTask ={completed: new Date().toISOString()} as Task
-                  const res = await google.patchTask(task.id, task.list, patchTask)
-                  if (res.status = 204) {
-                    showToast({ style: Toast.Style.Success, title: "Deleted" })
-                    await editTask(patchTask, i)
-                  } else {
-                    showToast({ style: Toast.Style.Failure, title: "Failed deleting" })
-                  }
-                  // TODO: Unncheck tasks
-                  setIsLoading(false)
-                  showToast({ style: Toast.Style.Success, title: "Task completed!" })
-                }}
-              />
+                    const patchTask = { completed: new Date().toISOString() } as Task
+                    const res = await google.patchTask(task.id, task.list, patchTask)
+                    if (res.status = 204) {
+                      showToast({ style: Toast.Style.Success, title: "Deleted" })
+                      await editTask(patchTask, i)
+                    } else {
+                      showToast({ style: Toast.Style.Failure, title: "Failed deleting" })
+                    }
+                    // TODO: Unncheck tasks
+                    setIsLoading(false)
+                    showToast({ style: Toast.Style.Success, title: "Task completed!" })
+                  }}
+                />
+                <Action
+                  icon={{ source: Icon.Plus, tintColor: Color.Yellow }}
+                  title="Create Task"
+                  shortcut={{ modifiers: ["cmd"], key: "n" }}
+                  onAction={async () => {
+                    push(<EditTaskForm index={i} currentList={currentList} lists={allTaskLists}
+                      createNew={true} filterTasks={filterTasks}
+                      isLoading={setIsLoading} addTask={addTask} editTask={editTask} />)
+                  }}
+                />
+                <Action
+                  icon={{ source: Icon.Pencil, tintColor: Color.Green }}
+                  title="Edit"
+                  shortcut={{ modifiers: ["cmd"], key: "e" }}
+                  onAction={() => {
+                    push(<EditTaskForm index={i} task={task} currentList={currentList} lists={allTaskLists}
+                      createNew={false} filterTasks={filterTasks}
+                      isLoading={setIsLoading} addTask={addTask} editTask={editTask} />)
+
+                  }}
+                />
+              </ActionPanel.Section>
               <Action
                 icon={{ source: Icon.TwoArrowsClockwise, tintColor: Color.PrimaryText }}
-                title="Update task list"
-                shortcut={{ modifiers: ["cmd"], key: "u" }}
-                onAction={() => {
-                  showToast({ style: Toast.Style.Success, title: "Updated task list" })
-                  getTasks()
+                title="Refresh"
+                shortcut={{ modifiers: ["cmd"], key: "r" }}
+                onAction={async () => {
+                  await getTasks()
+                  showToast({ style: Toast.Style.Success, title: "Refreshed" })
                 }}
               />
               <Action
@@ -222,27 +245,6 @@ export default function Command() {
                     }
                     setIsLoading(false)
                   }
-                }}
-              />
-              <Action
-                icon={{ source: Icon.Pencil, tintColor: Color.PrimaryText }}
-                title="Edit"
-                shortcut={{ modifiers: ["cmd"], key: "e" }}
-                onAction={() => {
-                  push(<EditTaskForm index={i} task={task} currentList={currentList} lists={allTaskLists}
-                    createNew={false} filterTasks={filterTasks}
-                    isLoading={setIsLoading} addTask={addTask} editTask={editTask} />)
-
-                }}
-              />
-              <Action
-                icon={{ source: Icon.Plus, tintColor: Color.PrimaryText }}
-                title="Create Task"
-                shortcut={{ modifiers: ["cmd"], key: "n" }}
-                onAction={async () => {
-                  push(<EditTaskForm index={i} currentList={currentList} lists={allTaskLists}
-                    createNew={true} filterTasks={filterTasks}
-                    isLoading={setIsLoading} addTask={addTask} editTask={editTask} />)
                 }}
               />
             </ActionPanel>
