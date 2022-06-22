@@ -18,8 +18,8 @@ For the purposes of this Privacy Policy:
 
 - **Account** means a unique account created for You to access our Service or parts of our Service.
 - **Affiliate** means an entity that controls, is controlled by or is under common control with a party, where "control" means ownership of 50% or more of the shares, equity interest or other securities entitled to vote for election of directors or other managing authority.
-- **Application** means the software program provided by the Company downloaded by You on any electronic device, named Ratasker
-- **Company** (referred to as either "the Company", "We", "Us" or "Our" in this Agreement) refers to Ratasker.
+- **Application** means the software program provided by the Company downloaded by You on any electronic device, named Raytasker
+- **Company** (referred to as either "the Company", "We", "Us" or "Our" in this Agreement) refers to Raytasker.
 - **Country** refers to: Sweden
 - **Device** means any device that can access the Service such as a computer, a cellphone or a digital tablet.
 - **Personal Data** is any information that relates to an identified or identifiable individual.
